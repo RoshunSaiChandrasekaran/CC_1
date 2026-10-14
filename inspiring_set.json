@@ -1,0 +1,2827 @@
+{
+  "_comment": "Inspiring set for the Cookie/Cake Recipe Generator assignment. Based on the structure used in Simple PIERRE (Morris et al., 2012), extended with 'category', 'meal_type' and per-ingredient 'role' metadata so the evolutionary algorithm can evaluate recipes more intelligently than a simple ingredient count. Amounts are approximate, scaled to realistic single-batch quantities in grams (g), millilitres (ml) or whole units.",
+  "roles": {
+    "structure": "Provides the bulk/structure of the baked good (flours, oats).",
+    "fat": "Provides richness, tenderness and flavour carrying (butter, oil, shortening).",
+    "sweetener": "Provides sweetness (sugars, syrups, honey).",
+    "binding": "Binds the other ingredients together (eggs, egg substitutes).",
+    "leavening": "Makes the product rise (baking soda, baking powder, yeast).",
+    "liquid": "Adds moisture (milk, buttermilk, water, juice).",
+    "flavour": "Adds aromatic/flavour notes without bulk (extracts, spices, zest).",
+    "seasoning": "Balances sweetness/enhances flavour (salt).",
+    "mix-in": "Adds texture/flavour pockets (chocolate chips, nuts, dried fruit).",
+    "decoration": "Used for finishing/presentation (icing, sprinkles, glaze)."
+  },
+  "recipes": [
+    {
+      "name": "Classic Chocolate Chip Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "vanilla extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "chocolate chips",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Oatmeal Raisin Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "rolled oats",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "raisins",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Peanut Butter Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 130,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "peanut butter",
+          "role": "fat"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Shortbread",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Snickerdoodle Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "cream of tartar",
+          "role": "leavening"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "decoration"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Gingerbread Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 350,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "molasses",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "ginger",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Double Chocolate Cookies",
+      "category": "cookie",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 220,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 50,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "dark chocolate chunks",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "White Chocolate Macadamia Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white chocolate chips",
+          "role": "mix-in"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "macadamia nuts",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Vanilla Sponge Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 4,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 100,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "vanilla extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Chocolate Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 220,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 70,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "structure"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 200,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 150,
+          "unit": "ml",
+          "ingredient": "hot coffee",
+          "role": "liquid"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Carrot Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 240,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 4,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "grated carrot",
+          "role": "mix-in"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "walnuts",
+          "role": "mix-in"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "cream cheese icing",
+          "role": "decoration"
+        }
+      ]
+    },
+    {
+      "name": "Lemon Drizzle Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 4,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "lemon zest",
+          "role": "flavour"
+        },
+        {
+          "amount": 60,
+          "unit": "ml",
+          "ingredient": "lemon juice",
+          "role": "flavour"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "icing sugar glaze",
+          "role": "decoration"
+        }
+      ]
+    },
+    {
+      "name": "Banana Bread",
+      "category": "cake",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "mashed banana",
+          "role": "liquid"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "walnuts",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Cheese and Chive Savoury Muffins",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 100,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 20,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 250,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "grated cheddar",
+          "role": "mix-in"
+        },
+        {
+          "amount": 15,
+          "unit": "g",
+          "ingredient": "chives",
+          "role": "flavour"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Cornbread",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "cornmeal",
+          "role": "structure"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 60,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 280,
+          "unit": "ml",
+          "ingredient": "buttermilk",
+          "role": "liquid"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Almond Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "ground almonds",
+          "role": "mix-in"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "almond extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Coconut Macaroons",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "desiccated coconut",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg white",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "vanilla extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Molasses Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "molasses",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "ginger",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Biscotti",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 60,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "almonds",
+          "role": "mix-in"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Linzer Cookies",
+      "category": "cookie",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 170,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "ground hazelnuts",
+          "role": "mix-in"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "raspberry jam",
+          "role": "decoration"
+        }
+      ]
+    },
+    {
+      "name": "Hazelnut Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 130,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "chopped hazelnuts",
+          "role": "mix-in"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Brown Butter Chocolate Chip Cookies",
+      "category": "cookie",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 170,
+          "unit": "g",
+          "ingredient": "browned butter",
+          "role": "fat"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 220,
+          "unit": "g",
+          "ingredient": "chocolate chips",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Maple Pecan Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 270,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 130,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "maple syrup",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "pecans",
+          "role": "mix-in"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Lemon Sugar Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "lemon zest",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Red Velvet Cookies",
+      "category": "cookie",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "structure"
+        },
+        {
+          "amount": 115,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "red food colouring",
+          "role": "decoration"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white chocolate chips",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Pistachio Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 140,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "chopped pistachios",
+          "role": "mix-in"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Spritz Butter Cookies",
+      "category": "cookie",
+      "meal_type": "snack",
+      "ingredients": [
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "vanilla extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 30,
+          "unit": "g",
+          "ingredient": "sprinkles",
+          "role": "decoration"
+        }
+      ]
+    },
+    {
+      "name": "Red Velvet Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 15,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "structure"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 240,
+          "unit": "ml",
+          "ingredient": "buttermilk",
+          "role": "liquid"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "red food colouring",
+          "role": "decoration"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "cream cheese icing",
+          "role": "decoration"
+        }
+      ]
+    },
+    {
+      "name": "Coffee Cake",
+      "category": "cake",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 180,
+          "unit": "ml",
+          "ingredient": "sour cream",
+          "role": "liquid"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "chopped walnuts",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Pound Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 225,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 4,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "vanilla extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Angel Food Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 10,
+          "unit": "unit",
+          "ingredient": "egg white",
+          "role": "binding"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "cream of tartar",
+          "role": "leavening"
+        },
+        {
+          "amount": 5,
+          "unit": "g",
+          "ingredient": "vanilla extract",
+          "role": "flavour"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Devil's Food Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 230,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 320,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 230,
+          "unit": "ml",
+          "ingredient": "buttermilk",
+          "role": "liquid"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Spice Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 220,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 180,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 4,
+          "unit": "g",
+          "ingredient": "nutmeg",
+          "role": "flavour"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Coconut Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 4,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 180,
+          "unit": "ml",
+          "ingredient": "coconut milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "desiccated coconut",
+          "role": "mix-in"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Apple Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 220,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "diced apple",
+          "role": "mix-in"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Pumpkin Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 280,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "pumpkin puree",
+          "role": "liquid"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "pumpkin spice",
+          "role": "flavour"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "pecans",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Zucchini Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 150,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 300,
+          "unit": "g",
+          "ingredient": "grated zucchini",
+          "role": "mix-in"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Olive Oil Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 240,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 180,
+          "unit": "ml",
+          "ingredient": "olive oil",
+          "role": "fat"
+        },
+        {
+          "amount": 220,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 3,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 120,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 1,
+          "unit": "unit",
+          "ingredient": "lemon zest",
+          "role": "flavour"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Marble Cake",
+      "category": "cake",
+      "meal_type": "dessert",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 230,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 4,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 120,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 30,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "flavour"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Blueberry Muffins",
+      "category": "muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 180,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "blueberries",
+          "role": "mix-in"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Banana Muffins",
+      "category": "muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 130,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "mashed banana",
+          "role": "liquid"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 60,
+          "unit": "g",
+          "ingredient": "walnuts",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Double Chocolate Muffins",
+      "category": "muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 230,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 40,
+          "unit": "g",
+          "ingredient": "cocoa powder",
+          "role": "structure"
+        },
+        {
+          "amount": 100,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 200,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "chocolate chips",
+          "role": "mix-in"
+        }
+      ]
+    },
+    {
+      "name": "Apple Cinnamon Muffins",
+      "category": "muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 140,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 160,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "diced apple",
+          "role": "mix-in"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "cinnamon",
+          "role": "flavour"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Raspberry Muffins",
+      "category": "muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 180,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 150,
+          "unit": "g",
+          "ingredient": "raspberries",
+          "role": "mix-in"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Pumpkin Spice Muffins",
+      "category": "muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 250,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 180,
+          "unit": "g",
+          "ingredient": "brown sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 200,
+          "unit": "g",
+          "ingredient": "pumpkin puree",
+          "role": "liquid"
+        },
+        {
+          "amount": 6,
+          "unit": "g",
+          "ingredient": "pumpkin spice",
+          "role": "flavour"
+        },
+        {
+          "amount": 8,
+          "unit": "g",
+          "ingredient": "baking soda",
+          "role": "leavening"
+        },
+        {
+          "amount": 2,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Bacon Cheddar Muffins",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 270,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "vegetable oil",
+          "role": "fat"
+        },
+        {
+          "amount": 15,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 220,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "cooked bacon",
+          "role": "mix-in"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "grated cheddar",
+          "role": "mix-in"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Spinach Feta Muffins",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 260,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "olive oil",
+          "role": "fat"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 200,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 120,
+          "unit": "g",
+          "ingredient": "chopped spinach",
+          "role": "mix-in"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "crumbled feta",
+          "role": "mix-in"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Jalapeno Cheddar Cornbread Muffins",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 140,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 140,
+          "unit": "g",
+          "ingredient": "cornmeal",
+          "role": "structure"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "butter",
+          "role": "fat"
+        },
+        {
+          "amount": 50,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 240,
+          "unit": "ml",
+          "ingredient": "buttermilk",
+          "role": "liquid"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "grated cheddar",
+          "role": "mix-in"
+        },
+        {
+          "amount": 30,
+          "unit": "g",
+          "ingredient": "jalapeno",
+          "role": "flavour"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Herb Parmesan Muffins",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 270,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "olive oil",
+          "role": "fat"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 220,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "grated parmesan",
+          "role": "mix-in"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "mixed herbs",
+          "role": "flavour"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    },
+    {
+      "name": "Sundried Tomato Muffins",
+      "category": "savoury_muffin",
+      "meal_type": "breakfast",
+      "ingredients": [
+        {
+          "amount": 270,
+          "unit": "g",
+          "ingredient": "flour",
+          "role": "structure"
+        },
+        {
+          "amount": 90,
+          "unit": "ml",
+          "ingredient": "olive oil",
+          "role": "fat"
+        },
+        {
+          "amount": 10,
+          "unit": "g",
+          "ingredient": "white sugar",
+          "role": "sweetener"
+        },
+        {
+          "amount": 2,
+          "unit": "unit",
+          "ingredient": "egg",
+          "role": "binding"
+        },
+        {
+          "amount": 210,
+          "unit": "ml",
+          "ingredient": "milk",
+          "role": "liquid"
+        },
+        {
+          "amount": 100,
+          "unit": "g",
+          "ingredient": "sundried tomato",
+          "role": "mix-in"
+        },
+        {
+          "amount": 80,
+          "unit": "g",
+          "ingredient": "grated parmesan",
+          "role": "mix-in"
+        },
+        {
+          "amount": 12,
+          "unit": "g",
+          "ingredient": "baking powder",
+          "role": "leavening"
+        },
+        {
+          "amount": 3,
+          "unit": "g",
+          "ingredient": "salt",
+          "role": "seasoning"
+        }
+      ]
+    }
+  ]
+}

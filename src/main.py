@@ -1,19 +1,3 @@
-"""
-main.py
-Command-line entry point for the Cookie/Cake Recipe Generator.
-
-Usage:
-    python src/main.py --generations 150 --population 30 --top 5 --seed 42
-
-Outputs (written to outputs/ by default):
-    fitness_history.png   - best & mean fitness per generation
-    final_population.json - the full final population, sorted by fitness
-    top_recipes.txt       - human-readable text for the top N recipes,
-                             formatted so they can be dropped straight
-                             into the cookbook / fed to a GenAI tool for
-                             illustration & backstory generation
-"""
-
 import argparse
 import json
 import os

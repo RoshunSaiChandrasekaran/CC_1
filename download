@@ -1,0 +1,5 @@
+outputs/*.png
+outputs/*.json
+outputs/*.txt
+__pycache__/
+*.pyc

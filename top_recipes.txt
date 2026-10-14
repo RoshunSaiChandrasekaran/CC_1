@@ -1,0 +1,96 @@
+Buttery Diced Apple Cake
+(cake) - fitness: 33.0
+
+Ingredients:
+  - 250g flour  [structure]
+  - 125g vegetable oil  [fat]
+  - 201g brown sugar  [sweetener]
+  - 4 eggs  [binding]
+  - 128g diced apple  [mix-in]
+  - 139ml milk  [liquid]
+  - 12g cocoa powder  [flavour]
+  - 7g baking powder  [leavening]
+  - 4g cinnamon  [flavour]
+  - 1g nutmeg  [flavour]
+  - 1g salt  [seasoning]
+
+----------------------------------------
+
+Fluffy Chocolate Chips Cookie
+(cookie) - fitness: 33.0
+
+Ingredients:
+  - 183g flour  [structure]
+  - 89g butter  [fat]
+  - 227g white sugar  [sweetener]
+  - 2 eggs  [binding]
+  - 45g ground almonds  [mix-in]
+  - 1g almond extract  [flavour]
+  - 66g cornmeal  [structure]
+  - 113ml buttermilk  [liquid]
+  - 47g chocolate chips  [mix-in]
+  - 14g jalapeno  [flavour]
+  - 5g baking powder  [leavening]
+  - 1g salt  [seasoning]
+
+----------------------------------------
+
+Rustic Diced Apple Cake
+(cake) - fitness: 33.0
+
+Ingredients:
+  - 250g flour  [structure]
+  - 115g vegetable oil  [fat]
+  - 211g brown sugar  [sweetener]
+  - 3 eggs  [binding]
+  - 288g diced apple  [mix-in]
+  - 7g cinnamon  [flavour]
+  - 3g salt  [seasoning]
+  - 78g butter  [fat]
+  - 33g white sugar  [sweetener]
+  - 164ml buttermilk  [liquid]
+  - 68g grated cheddar  [mix-in]
+  - 20g jalapeno  [flavour]
+  - 7g baking powder  [leavening]
+
+----------------------------------------
+
+Chewy Chocolate Chips Savoury Muffin
+(savoury_muffin) - fitness: 33.0
+
+Ingredients:
+  - 67g flour  [structure]
+  - 182g cornmeal  [structure]
+  - 70g butter  [fat]
+  - 180g white sugar  [sweetener]
+  - 2 eggs  [binding]
+  - 35g ground almonds  [mix-in]
+  - 1g almond extract  [flavour]
+  - 89ml buttermilk  [liquid]
+  - 37g chocolate chips  [mix-in]
+  - 11g jalapeno  [flavour]
+  - 3g baking powder  [leavening]
+  - 1g salt  [seasoning]
+
+----------------------------------------
+
+Chewy Diced Apple Savoury Muffin
+(savoury_muffin) - fitness: 33.0
+
+Ingredients:
+  - 125g flour  [structure]
+  - 125g cornmeal  [structure]
+  - 149g butter  [fat]
+  - 77g white sugar  [sweetener]
+  - 5 eggs  [binding]
+  - 211g brown sugar  [sweetener]
+  - 288g diced apple  [mix-in]
+  - 7g cinnamon  [flavour]
+  - 3g salt  [seasoning]
+  - 164ml buttermilk  [liquid]
+  - 68g grated cheddar  [mix-in]
+  - 20g jalapeno  [flavour]
+  - 7g baking powder  [leavening]
+
+----------------------------------------
+

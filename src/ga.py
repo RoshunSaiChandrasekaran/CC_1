@@ -1,20 +1,16 @@
 """
 ga.py
 Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
-
-This is a Python re-implementation of the Simple PIERRE procedure
-(Tutorial 1, based on Morris et al., 2012), adapted to baking and
-extended with:
-  - a multi-factor fitness function (role coverage, ratio quality,
+  - A multi-factor fitness function (role coverage, ratio quality,
     recipe-size sanity, mix-in variety) instead of a plain ingredient
     count
-  - role-aware mutation (ingredient substitution prefers same-role
+  - Role-aware mutation (ingredient substitution prefers same-role
     ingredients most of the time, to keep recipes coherent, but still
     allows fully random substitution some of the time for novelty)
-  - baking-appropriate normalisation (scaled relative to the flour /
+  - Baking-appropriate normalisation (scaled relative to the flour /
     "structure" weight, rather than to a fixed total volume as in the
     original soup-based PIERRE)
-  - descriptive name generation based on the recipe's dominant
+  - Descriptive name generation based on the recipe's dominant
     mix-in/flavour ingredient
 """
 

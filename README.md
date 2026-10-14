@@ -12,11 +12,7 @@ mutation, and baking-appropriate normalisation.
 | Inspiring set | Done - 50 recipes in `data/inspiring_set.json` |
 | Knowledgebase | Done - same file, with `category`/`meal_type`/`role` metadata |
 | Evolutionary algorithm | Done - `src/ga.py` + `src/main.py`, tested, runs end to end |
-| Report (PDF, ICCC template) | Not started |
-| Cookbook (PDF, >=3 recipes + GenAI reflection) | Not started |
 
-So what's here is the **generator only**. The report and cookbook are
-separate, not-yet-started deliverables (see the assignment brief).
 
 ## Requirements
 
@@ -74,8 +70,7 @@ Each run writes to `outputs/`:
 - `fitness_history.png` - best and mean population fitness per generation
 - `final_population.json` - the entire final population, sorted by fitness
 - `top_recipes.txt` - the top N recipes in a human-readable format, ready
-  to be used as the raw material for the cookbook (e.g. pasted into a
-  GenAI tool to generate illustrations/backstories/formatting)
+  to be used as the raw material for the cookbook.
 
 ## How it works (summary)
 

@@ -24,8 +24,7 @@ from dataclasses import dataclass, field
 # Constants describing what makes a "valid"/"good" baked good.
 # These bands were set by eyeballing typical ratios in the inspiring set
 # (see data/inspiring_set.json) and standard baking references; they are
-# deliberately a rough, declared approximation rather than ground truth -
-# see the report for a discussion of this choice and its limitations.
+# deliberately a rough, declared approximation rather than ground truth
 # ---------------------------------------------------------------------------
 
 ESSENTIAL_ROLES = ["structure", "fat", "sweetener"]

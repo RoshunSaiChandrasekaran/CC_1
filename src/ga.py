@@ -1,9 +1,15 @@
 """
 ga.py
 Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
-  - A multi-factor fitness function (role coverage, ratio quality,
-    recipe-size sanity, mix-in variety) instead of a plain ingredient
-    count
+  - A ratio-based fitness function: every role is measured as a baker's
+    percentage (ratio to flour weight) and scored by closeness to the
+    typical value for the recipe's category, learned from the inspiring
+    set. Scaled to 0..MAX_FITNESS (33), the same ceiling as the original.
+  - Flavour-pair compatibility learned from the inspiring set
+  - Diversity-preserving survivor selection: duplicate recipes are
+    removed and the best few of every category are always kept
+  - Bolder mutation: 1-3 changes per child, plus a targeted
+    mix-in/flavour swap
   - Role-aware mutation (ingredient substitution prefers same-role
     ingredients most of the time, to keep recipes coherent, but still
     allows fully random substitution some of the time for novelty)
@@ -12,33 +18,54 @@ Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
     original soup-based PIERRE)
   - Descriptive name generation based on the recipe's dominant
     mix-in/flavour ingredient
+  - Small amounts (salt, extracts, leavening) are no longer truncated
+    to whole grams by mutation/normalisation
 """
 
 import copy
 import json
+import math
 import random
+import statistics
+from collections import defaultdict
 from dataclasses import dataclass, field
+from itertools import combinations
 
 
 # ---------------------------------------------------------------------------
 # Constants describing what makes a "valid"/"good" baked good.
-# These bands were set by eyeballing typical ratios in the inspiring set
+# These bands were set by typical ratios in the inspiring set
 # (see data/inspiring_set.json) and standard baking references; they are
-# deliberately a rough, declared approximation rather than ground truth
+# deliberately a rough, declared approximation rather than ground truth -
+# see the report for a discussion of this choice and its limitations.
 # ---------------------------------------------------------------------------
 
 ESSENTIAL_ROLES = ["structure", "fat", "sweetener"]
 BONUS_ROLES = ["binding", "leavening", "liquid", "flavour", "mix-in"]
 
-# acceptable ratio of (role weight) / (structure weight)
-RATIO_BANDS = {
-    "fat": (0.25, 1.0),
-    "sweetener": (0.25, 1.3),
-}
-
 MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
+MAX_FITNESS = 33  # fitness is scaled to 0..MAX_FITNESS (same ceiling as the original function)
+
+EGG_G = 50  # assumed weight of one egg, so eggs count towards the binding ratio
+
+# How much each ratio matters in the fitness score
+FEATURE_WEIGHT = {
+    "fat": 3,
+    "sweetener": 3,
+    "binding": 2,
+    "liquid": 2,
+    "leavening": 2,
+    "salt": 1,
+    "mix-in": 1.5,
+    "flavour": 1,
+}
+FEATURES = list(FEATURE_WEIGHT)
+
+# Filled by learn_targets():
+TARGETS = {}   # category -> feature -> (median, spread)
+PAIRS = set()  # (mix-in/flavour) pairs seen together in real recipes
 
 
 def load_inspiring_set(path):
@@ -65,6 +92,71 @@ def ingredients_by_role(all_ingredients):
 
 
 # ---------------------------------------------------------------------------
+# Ratios and learned targets
+# ---------------------------------------------------------------------------
+
+def grams(i):
+    """Approximate weight of an ingredient line (eggs count as EGG_G each)."""
+    if i["unit"] in ("g", "ml"):
+        return i["amount"]
+    if i["unit"] == "unit" and "egg" in i["ingredient"].lower():
+        return i["amount"] * EGG_G
+    return 0
+
+
+def feature_of(i):
+    return "salt" if i["ingredient"].lower() == "salt" else i["role"]
+
+
+def ratios(recipe):
+    """Every feature as a ratio to total structure (flour) weight.
+    Returns None if the recipe has no structural ingredient."""
+    structure = sum(grams(i) for i in recipe["ingredients"] if i["role"] == "structure")
+    if structure <= 0:
+        return None
+    out = {f: 0.0 for f in FEATURES}
+    for i in recipe["ingredients"]:
+        f = feature_of(i)
+        if f in out:
+            out[f] += grams(i) / structure
+    return out
+
+
+def flavour_names(recipe):
+    return sorted({i["ingredient"] for i in recipe["ingredients"]
+                   if i["role"] in ("mix-in", "flavour")
+                   and i["ingredient"].lower() != "salt"})
+
+
+def learn_targets(recipes):
+    """Learn per-category median/spread of each ratio from the inspiring set,
+    plus which mix-in/flavour pairs co-occur in real recipes."""
+    by_cat = defaultdict(list)
+    PAIRS.clear()
+    for r in recipes:
+        rt = ratios(r)
+        if rt:
+            by_cat[r.get("category", "cookie")].append(rt)
+        PAIRS.update(combinations(flavour_names(r), 2))
+
+    def stats(rows):
+        t = {}
+        for f in FEATURES:
+            vals = [row[f] for row in rows]
+            med = statistics.median(vals)
+            mad = statistics.median(abs(v - med) for v in vals) * 1.4826
+            # spread floor: never let a category become impossibly strict
+            t[f] = (med, max(mad, 0.25 * med, 0.05))
+        return t
+
+    TARGETS.clear()
+    TARGETS["_all"] = stats([x for rows in by_cat.values() for x in rows])
+    for cat, rows in by_cat.items():
+        # categories with very few examples fall back to the global targets
+        TARGETS[cat] = stats(rows) if len(rows) >= 5 else TARGETS["_all"]
+
+
+# ---------------------------------------------------------------------------
 # Fitness
 # ---------------------------------------------------------------------------
 
@@ -73,56 +165,35 @@ def weight_by_role(recipe, role):
 
 
 def evaluate_recipe(recipe):
-    """Multi-factor fitness function.
+    """Returns a score in 0..MAX_FITNESS (33). MAX_FITNESS = every ratio at
+    its category's typical value and every flavour pair seen together in
+    real recipes."""
+    if not TARGETS:
+        raise RuntimeError("Call learn_targets(recipes) before evaluate_recipe().")
 
-    Replaces Simple PIERRE's "fitness = number of ingredients" with a
-    score that rewards recipes that (a) actually contain the roles needed
-    to function as a baked good, (b) have fat/sweetener in a sensible
-    proportion to the structural ingredients, (c) are a sensible size,
-    and (d) have some variety of mix-in/flavour ingredients (a proxy for
-    interestingness/novelty).
-    """
-    roles_present = {i["role"] for i in recipe["ingredients"]}
+    rt = ratios(recipe)
+    if rt is None:
+        return 0.0
+    target = TARGETS.get(recipe.get("category"), TARGETS["_all"])
+
+    # smooth Gaussian closeness per ratio -> always a gradient to climb
     score = 0.0
+    for f, w in FEATURE_WEIGHT.items():
+        med, spread = target[f]
+        z = (rt[f] - med) / spread
+        score += w * math.exp(-0.5 * z * z)
+    score /= sum(FEATURE_WEIGHT.values())
 
-    # --- Validity: must contain the essential roles, or be heavily penalised
-    missing_essential = [r for r in ESSENTIAL_ROLES if r not in roles_present]
-    if missing_essential:
-        score -= 15 * len(missing_essential)
+    # flavour compatibility: fraction of mix-in/flavour pairs seen in real recipes
+    pairs = list(combinations(flavour_names(recipe), 2))
+    pair_score = sum(p in PAIRS for p in pairs) / len(pairs) if pairs else 1.0
+    score = 0.85 * score + 0.15 * pair_score
 
-    # --- Bonus roles present (binding, leavening, liquid, flavour, mix-in)
-    for r in BONUS_ROLES:
-        if r in roles_present:
-            score += 3
-
-    # --- Ratio quality, relative to structure weight
-    structure_weight = weight_by_role(recipe, "structure")
-    if structure_weight > 0:
-        for role, (low, high) in RATIO_BANDS.items():
-            role_weight = weight_by_role(recipe, role)
-            ratio = role_weight / structure_weight
-            if low <= ratio <= high:
-                score += 5
-            else:
-                # partial credit the closer it is to the band
-                distance = min(abs(ratio - low), abs(ratio - high))
-                score += max(0, 5 - distance * 5)
-    else:
-        score -= 10  # no structural ingredients at all -> not really a recipe
-
-    # --- Recipe-size sanity (too few or too many ingredients is unrealistic)
+    # recipe-size sanity
     n = len(recipe["ingredients"])
-    if n < MIN_INGREDIENTS:
-        score -= (MIN_INGREDIENTS - n) * 4
-    elif n > MAX_INGREDIENTS:
-        score -= (n - MAX_INGREDIENTS) * 2
-
-    # --- Mix-in / flavour variety bonus (proxy for interestingness), capped
-    interesting_roles = {"mix-in", "flavour"}
-    variety = len({i["ingredient"] for i in recipe["ingredients"] if i["role"] in interesting_roles})
-    score += min(variety, 4) * 2
-
-    return score
+    if n < MIN_INGREDIENTS or n > MAX_INGREDIENTS:
+        score *= 0.7
+    return score * MAX_FITNESS
 
 
 def evaluate_population(recipes):
@@ -178,16 +249,33 @@ def crossover_recipes(r1, r2):
 # Mutation
 # ---------------------------------------------------------------------------
 
-def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
-    op = random.randint(0, 3)
+def _scaled_amount(value, unit):
+    """Round an amount without truncating small values to zero."""
+    if unit == "unit":
+        return max(1, round(value))
+    return max(0.5, round(value, 1)) if value < 10 else int(value)
+
+
+FLAVOUR_ROLES = ("mix-in", "flavour")
+
+
+def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7, max_ops=3):
+    """Apply between 1 and max_ops random mutations to the recipe."""
+    for _ in range(random.randint(1, max_ops)):
+        _mutate_once(recipe, all_ingredients, by_role, same_role_prob)
+
+
+def _mutate_once(recipe, all_ingredients, by_role, same_role_prob):
+    op = random.randint(0, 4)
     ingredients = recipe["ingredients"]
 
     if op == 0 and ingredients:
-        # change the amount of a random ingredient by +/- 10-30%
+        # change the amount of a random ingredient by +/- up to 30%
         i = random.randrange(len(ingredients))
         ingredients[i] = dict(ingredients[i])
         delta = random.uniform(-0.3, 0.3)
-        ingredients[i]["amount"] = max(1, int(ingredients[i]["amount"] * (1 + delta)))
+        new = ingredients[i]["amount"] * (1 + delta)
+        ingredients[i]["amount"] = _scaled_amount(new, ingredients[i]["unit"])
 
     elif op == 1 and ingredients:
         # swap an ingredient for another one; prefer one with the same role
@@ -213,6 +301,21 @@ def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
         # delete a random ingredient
         i = random.randrange(len(ingredients))
         ingredients.pop(i)
+
+    elif op == 4:
+        # swap a mix-in / flavour for a different one of the same role and unit
+        # (e.g. blueberries -> walnuts). The random slot pick in op 1 rarely
+        # lands on the flavour, so this operator targets it directly.
+        slots = [k for k, ing in enumerate(ingredients) if ing["role"] in FLAVOUR_ROLES]
+        if slots:
+            i = random.choice(slots)
+            current = ingredients[i]
+            options = [c for c in by_role.get(current["role"], [])
+                       if c["ingredient"] != current["ingredient"] and c["unit"] == current["unit"]]
+            if options:
+                choice = random.choice(options)
+                ingredients[i] = dict(current)
+                ingredients[i]["ingredient"] = choice["ingredient"]
 
 
 # ---------------------------------------------------------------------------
@@ -249,7 +352,7 @@ def normalise_recipe(recipe, target_structure_weight=TARGET_STRUCTURE_WEIGHT):
         scale = target_structure_weight / structure_weight
         for i in ingredients:
             if i["unit"] in ("g", "ml"):
-                i["amount"] = max(1, int(i["amount"] * scale))
+                i["amount"] = _scaled_amount(i["amount"] * scale, i["unit"])
             elif i["unit"] == "unit":
                 # round whole-item ingredients (eggs, bananas...) to the
                 # nearest whole number, scaled gently, minimum of 1
@@ -306,12 +409,48 @@ def generate_recipes(size, population, all_ingredients, by_role):
     return new_recipes
 
 
-def select_population(population, new_recipes):
-    new_recipes.sort(key=lambda r: r["fitness"], reverse=True)
-    half = len(population) // 2
-    combined = population[:half] + new_recipes[:half]
-    combined.sort(key=lambda r: r["fitness"], reverse=True)
-    return combined
+def recipe_signature(recipe):
+    """Identity used to detect duplicates: category + set of ingredient names."""
+    return (recipe.get("category"),
+            tuple(sorted(i["ingredient"] for i in recipe["ingredients"])))
+
+
+def select_population(population, new_recipes, min_per_category=2):
+    """Survivor selection with diversity protection.
+
+      1. pool the old population and the new recipes,
+      2. drop duplicates (same category + same ingredient names), keeping the
+         best-scoring copy,
+      3. reserve the best `min_per_category` recipes of every category, so one
+         category cannot take over the population,
+      4. fill the remaining places by fitness (topping up with the best
+         duplicates only if there are not enough unique recipes).
+    """
+    size = len(population)
+    pool = sorted(population + new_recipes, key=lambda r: r["fitness"], reverse=True)
+
+    unique, duplicates, seen = [], [], set()
+    for r in pool:
+        sig = recipe_signature(r)
+        if sig in seen:
+            duplicates.append(r)
+        else:
+            seen.add(sig)
+            unique.append(r)
+
+    reserved, counts = [], defaultdict(int)
+    for r in unique:
+        cat = r.get("category")
+        if counts[cat] < min_per_category:
+            reserved.append(r)
+            counts[cat] += 1
+    reserved = reserved[:size]
+
+    reserved_ids = {id(r) for r in reserved}
+    rest = [r for r in unique if id(r) not in reserved_ids] + duplicates
+    survivors = reserved + rest[: size - len(reserved)]
+    survivors.sort(key=lambda r: r["fitness"], reverse=True)
+    return survivors
 
 
 @dataclass
@@ -324,6 +463,8 @@ class RunResult:
 def run_evolution(recipes, population_size=30, generations=100, seed=None):
     if seed is not None:
         random.seed(seed)
+
+    learn_targets(recipes)  # must happen before any fitness evaluation
 
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)

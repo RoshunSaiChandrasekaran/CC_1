@@ -5,6 +5,11 @@ Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
     percentage (ratio to flour weight) and scored by closeness to the
     typical value for the recipe's category, learned from the inspiring
     set. Scaled to 0..MAX_FITNESS (33), the same ceiling as the original.
+  - Flavour-pair compatibility learned from the inspiring set
+  - Diversity-preserving survivor selection: duplicate recipes are
+    removed and the best few of every category are always kept
+  - Bolder mutation: 1-3 changes per child, plus a targeted
+    mix-in/flavour swap
   - Role-aware mutation (ingredient substitution prefers same-role
     ingredients most of the time, to keep recipes coherent, but still
     allows fully random substitution some of the time for novelty)
@@ -24,6 +29,7 @@ import random
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass, field
+from itertools import combinations
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +65,7 @@ FEATURES = list(FEATURE_WEIGHT)
 
 # Filled by learn_targets():
 TARGETS = {}   # category -> feature -> (median, spread)
+PAIRS = set()  # (mix-in/flavour) pairs seen together in real recipes
 
 
 def load_inspiring_set(path):
@@ -115,13 +122,22 @@ def ratios(recipe):
     return out
 
 
+def flavour_names(recipe):
+    return sorted({i["ingredient"] for i in recipe["ingredients"]
+                   if i["role"] in ("mix-in", "flavour")
+                   and i["ingredient"].lower() != "salt"})
+
+
 def learn_targets(recipes):
-    """Learn per-category median/spread of each ratio from the inspiring set."""
+    """Learn per-category median/spread of each ratio from the inspiring set,
+    plus which mix-in/flavour pairs co-occur in real recipes."""
     by_cat = defaultdict(list)
+    PAIRS.clear()
     for r in recipes:
         rt = ratios(r)
         if rt:
             by_cat[r.get("category", "cookie")].append(rt)
+        PAIRS.update(combinations(flavour_names(r), 2))
 
     def stats(rows):
         t = {}
@@ -150,7 +166,8 @@ def weight_by_role(recipe, role):
 
 def evaluate_recipe(recipe):
     """Returns a score in 0..MAX_FITNESS (33). MAX_FITNESS = every ratio at
-    its category's typical value."""
+    its category's typical value and every flavour pair seen together in
+    real recipes."""
     if not TARGETS:
         raise RuntimeError("Call learn_targets(recipes) before evaluate_recipe().")
 
@@ -166,6 +183,11 @@ def evaluate_recipe(recipe):
         z = (rt[f] - med) / spread
         score += w * math.exp(-0.5 * z * z)
     score /= sum(FEATURE_WEIGHT.values())
+
+    # flavour compatibility: fraction of mix-in/flavour pairs seen in real recipes
+    pairs = list(combinations(flavour_names(recipe), 2))
+    pair_score = sum(p in PAIRS for p in pairs) / len(pairs) if pairs else 1.0
+    score = 0.85 * score + 0.15 * pair_score
 
     # recipe-size sanity
     n = len(recipe["ingredients"])
@@ -234,8 +256,17 @@ def _scaled_amount(value, unit):
     return max(0.5, round(value, 1)) if value < 10 else int(value)
 
 
-def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
-    op = random.randint(0, 3)
+FLAVOUR_ROLES = ("mix-in", "flavour")
+
+
+def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7, max_ops=3):
+    """Apply between 1 and max_ops random mutations to the recipe."""
+    for _ in range(random.randint(1, max_ops)):
+        _mutate_once(recipe, all_ingredients, by_role, same_role_prob)
+
+
+def _mutate_once(recipe, all_ingredients, by_role, same_role_prob):
+    op = random.randint(0, 4)
     ingredients = recipe["ingredients"]
 
     if op == 0 and ingredients:
@@ -270,6 +301,21 @@ def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
         # delete a random ingredient
         i = random.randrange(len(ingredients))
         ingredients.pop(i)
+
+    elif op == 4:
+        # swap a mix-in / flavour for a different one of the same role and unit
+        # (e.g. blueberries -> walnuts). The random slot pick in op 1 rarely
+        # lands on the flavour, so this operator targets it directly.
+        slots = [k for k, ing in enumerate(ingredients) if ing["role"] in FLAVOUR_ROLES]
+        if slots:
+            i = random.choice(slots)
+            current = ingredients[i]
+            options = [c for c in by_role.get(current["role"], [])
+                       if c["ingredient"] != current["ingredient"] and c["unit"] == current["unit"]]
+            if options:
+                choice = random.choice(options)
+                ingredients[i] = dict(current)
+                ingredients[i]["ingredient"] = choice["ingredient"]
 
 
 # ---------------------------------------------------------------------------
@@ -363,12 +409,48 @@ def generate_recipes(size, population, all_ingredients, by_role):
     return new_recipes
 
 
-def select_population(population, new_recipes):
-    new_recipes.sort(key=lambda r: r["fitness"], reverse=True)
-    half = len(population) // 2
-    combined = population[:half] + new_recipes[:half]
-    combined.sort(key=lambda r: r["fitness"], reverse=True)
-    return combined
+def recipe_signature(recipe):
+    """Identity used to detect duplicates: category + set of ingredient names."""
+    return (recipe.get("category"),
+            tuple(sorted(i["ingredient"] for i in recipe["ingredients"])))
+
+
+def select_population(population, new_recipes, min_per_category=2):
+    """Survivor selection with diversity protection.
+
+      1. pool the old population and the new recipes,
+      2. drop duplicates (same category + same ingredient names), keeping the
+         best-scoring copy,
+      3. reserve the best `min_per_category` recipes of every category, so one
+         category cannot take over the population,
+      4. fill the remaining places by fitness (topping up with the best
+         duplicates only if there are not enough unique recipes).
+    """
+    size = len(population)
+    pool = sorted(population + new_recipes, key=lambda r: r["fitness"], reverse=True)
+
+    unique, duplicates, seen = [], [], set()
+    for r in pool:
+        sig = recipe_signature(r)
+        if sig in seen:
+            duplicates.append(r)
+        else:
+            seen.add(sig)
+            unique.append(r)
+
+    reserved, counts = [], defaultdict(int)
+    for r in unique:
+        cat = r.get("category")
+        if counts[cat] < min_per_category:
+            reserved.append(r)
+            counts[cat] += 1
+    reserved = reserved[:size]
+
+    reserved_ids = {id(r) for r in reserved}
+    rest = [r for r in unique if id(r) not in reserved_ids] + duplicates
+    survivors = reserved + rest[: size - len(reserved)]
+    survivors.sort(key=lambda r: r["fitness"], reverse=True)
+    return survivors
 
 
 @dataclass

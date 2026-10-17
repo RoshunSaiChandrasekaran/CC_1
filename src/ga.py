@@ -1,9 +1,10 @@
 """
 ga.py
 Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
-  - A multi-factor fitness function (role coverage, ratio quality,
-    recipe-size sanity, mix-in variety) instead of a plain ingredient
-    count
+  - A ratio-based fitness function: every role is measured as a baker's
+    percentage (ratio to flour weight) and scored by closeness to the
+    typical value for the recipe's category, learned from the inspiring
+    set. Scaled to 0..MAX_FITNESS (33), the same ceiling as the original.
   - Role-aware mutation (ingredient substitution prefers same-role
     ingredients most of the time, to keep recipes coherent, but still
     allows fully random substitution some of the time for novelty)
@@ -14,12 +15,11 @@ Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
     mix-in/flavour ingredient
   - Small amounts (salt, extracts, leavening) are no longer truncated
     to whole grams by mutation/normalisation
-  - Ratio helpers + per-category targets learned from the inspiring set
-    (computed but not yet used by the fitness function)
 """
 
 import copy
 import json
+import math
 import random
 import statistics
 from collections import defaultdict
@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 
 # ---------------------------------------------------------------------------
 # Constants describing what makes a "valid"/"good" baked good.
-# These bands were set by eyeballing typical ratios in the inspiring set
+# These bands were set by typical ratios in the inspiring set
 # (see data/inspiring_set.json) and standard baking references; they are
 # deliberately a rough, declared approximation rather than ground truth -
 # see the report for a discussion of this choice and its limitations.
@@ -37,19 +37,14 @@ from dataclasses import dataclass, field
 ESSENTIAL_ROLES = ["structure", "fat", "sweetener"]
 BONUS_ROLES = ["binding", "leavening", "liquid", "flavour", "mix-in"]
 
-# acceptable ratio of (role weight) / (structure weight)
-RATIO_BANDS = {
-    "fat": (0.25, 1.0),
-    "sweetener": (0.25, 1.3),
-}
-
 MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
+MAX_FITNESS = 33  # fitness is scaled to 0..MAX_FITNESS (same ceiling as the original function)
 
 EGG_G = 50  # assumed weight of one egg, so eggs count towards the binding ratio
 
-# How much each ratio will matter in the fitness score
+# How much each ratio matters in the fitness score
 FEATURE_WEIGHT = {
     "fat": 3,
     "sweetener": 3,
@@ -154,56 +149,29 @@ def weight_by_role(recipe, role):
 
 
 def evaluate_recipe(recipe):
-    """Multi-factor fitness function.
+    """Returns a score in 0..MAX_FITNESS (33). MAX_FITNESS = every ratio at
+    its category's typical value."""
+    if not TARGETS:
+        raise RuntimeError("Call learn_targets(recipes) before evaluate_recipe().")
 
-    Replaces Simple PIERRE's "fitness = number of ingredients" with a
-    score that rewards recipes that (a) actually contain the roles needed
-    to function as a baked good, (b) have fat/sweetener in a sensible
-    proportion to the structural ingredients, (c) are a sensible size,
-    and (d) have some variety of mix-in/flavour ingredients (a proxy for
-    interestingness/novelty).
-    """
-    roles_present = {i["role"] for i in recipe["ingredients"]}
+    rt = ratios(recipe)
+    if rt is None:
+        return 0.0
+    target = TARGETS.get(recipe.get("category"), TARGETS["_all"])
+
+    # smooth Gaussian closeness per ratio -> always a gradient to climb
     score = 0.0
+    for f, w in FEATURE_WEIGHT.items():
+        med, spread = target[f]
+        z = (rt[f] - med) / spread
+        score += w * math.exp(-0.5 * z * z)
+    score /= sum(FEATURE_WEIGHT.values())
 
-    # --- Validity: must contain the essential roles, or be heavily penalised
-    missing_essential = [r for r in ESSENTIAL_ROLES if r not in roles_present]
-    if missing_essential:
-        score -= 15 * len(missing_essential)
-
-    # --- Bonus roles present (binding, leavening, liquid, flavour, mix-in)
-    for r in BONUS_ROLES:
-        if r in roles_present:
-            score += 3
-
-    # --- Ratio quality, relative to structure weight
-    structure_weight = weight_by_role(recipe, "structure")
-    if structure_weight > 0:
-        for role, (low, high) in RATIO_BANDS.items():
-            role_weight = weight_by_role(recipe, role)
-            ratio = role_weight / structure_weight
-            if low <= ratio <= high:
-                score += 5
-            else:
-                # partial credit the closer it is to the band
-                distance = min(abs(ratio - low), abs(ratio - high))
-                score += max(0, 5 - distance * 5)
-    else:
-        score -= 10  # no structural ingredients at all -> not really a recipe
-
-    # --- Recipe-size sanity (too few or too many ingredients is unrealistic)
+    # recipe-size sanity
     n = len(recipe["ingredients"])
-    if n < MIN_INGREDIENTS:
-        score -= (MIN_INGREDIENTS - n) * 4
-    elif n > MAX_INGREDIENTS:
-        score -= (n - MAX_INGREDIENTS) * 2
-
-    # --- Mix-in / flavour variety bonus (proxy for interestingness), capped
-    interesting_roles = {"mix-in", "flavour"}
-    variety = len({i["ingredient"] for i in recipe["ingredients"] if i["role"] in interesting_roles})
-    score += min(variety, 4) * 2
-
-    return score
+    if n < MIN_INGREDIENTS or n > MAX_INGREDIENTS:
+        score *= 0.7
+    return score * MAX_FITNESS
 
 
 def evaluate_population(recipes):

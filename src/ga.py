@@ -12,6 +12,8 @@ Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
     original soup-based PIERRE)
   - Descriptive name generation based on the recipe's dominant
     mix-in/flavour ingredient
+  - Small amounts (salt, extracts, leavening) are no longer truncated
+    to whole grams by mutation/normalisation
 """
 
 import copy
@@ -24,7 +26,8 @@ from dataclasses import dataclass, field
 # Constants describing what makes a "valid"/"good" baked good.
 # These bands were set by eyeballing typical ratios in the inspiring set
 # (see data/inspiring_set.json) and standard baking references; they are
-# deliberately a rough, declared approximation rather than ground truth
+# deliberately a rough, declared approximation rather than ground truth -
+# see the report for a discussion of this choice and its limitations.
 # ---------------------------------------------------------------------------
 
 ESSENTIAL_ROLES = ["structure", "fat", "sweetener"]
@@ -178,16 +181,24 @@ def crossover_recipes(r1, r2):
 # Mutation
 # ---------------------------------------------------------------------------
 
+def _scaled_amount(value, unit):
+    """Round an amount without truncating small values to zero."""
+    if unit == "unit":
+        return max(1, round(value))
+    return max(0.5, round(value, 1)) if value < 10 else int(value)
+
+
 def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
     op = random.randint(0, 3)
     ingredients = recipe["ingredients"]
 
     if op == 0 and ingredients:
-        # change the amount of a random ingredient by +/- 10-30%
+        # change the amount of a random ingredient by +/- up to 30%
         i = random.randrange(len(ingredients))
         ingredients[i] = dict(ingredients[i])
         delta = random.uniform(-0.3, 0.3)
-        ingredients[i]["amount"] = max(1, int(ingredients[i]["amount"] * (1 + delta)))
+        new = ingredients[i]["amount"] * (1 + delta)
+        ingredients[i]["amount"] = _scaled_amount(new, ingredients[i]["unit"])
 
     elif op == 1 and ingredients:
         # swap an ingredient for another one; prefer one with the same role
@@ -249,7 +260,7 @@ def normalise_recipe(recipe, target_structure_weight=TARGET_STRUCTURE_WEIGHT):
         scale = target_structure_weight / structure_weight
         for i in ingredients:
             if i["unit"] in ("g", "ml"):
-                i["amount"] = max(1, int(i["amount"] * scale))
+                i["amount"] = _scaled_amount(i["amount"] * scale, i["unit"])
             elif i["unit"] == "unit":
                 # round whole-item ingredients (eggs, bananas...) to the
                 # nearest whole number, scaled gently, minimum of 1

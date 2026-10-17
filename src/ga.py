@@ -14,11 +14,15 @@ Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
     mix-in/flavour ingredient
   - Small amounts (salt, extracts, leavening) are no longer truncated
     to whole grams by mutation/normalisation
+  - Ratio helpers + per-category targets learned from the inspiring set
+    (computed but not yet used by the fitness function)
 """
 
 import copy
 import json
 import random
+import statistics
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 
@@ -43,6 +47,24 @@ MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
 
+EGG_G = 50  # assumed weight of one egg, so eggs count towards the binding ratio
+
+# How much each ratio will matter in the fitness score
+FEATURE_WEIGHT = {
+    "fat": 3,
+    "sweetener": 3,
+    "binding": 2,
+    "liquid": 2,
+    "leavening": 2,
+    "salt": 1,
+    "mix-in": 1.5,
+    "flavour": 1,
+}
+FEATURES = list(FEATURE_WEIGHT)
+
+# Filled by learn_targets():
+TARGETS = {}   # category -> feature -> (median, spread)
+
 
 def load_inspiring_set(path):
     with open(path, "r") as f:
@@ -65,6 +87,62 @@ def ingredients_by_role(all_ingredients):
     for i in all_ingredients:
         by_role.setdefault(i["role"], []).append(i)
     return by_role
+
+
+# ---------------------------------------------------------------------------
+# Ratios and learned targets
+# ---------------------------------------------------------------------------
+
+def grams(i):
+    """Approximate weight of an ingredient line (eggs count as EGG_G each)."""
+    if i["unit"] in ("g", "ml"):
+        return i["amount"]
+    if i["unit"] == "unit" and "egg" in i["ingredient"].lower():
+        return i["amount"] * EGG_G
+    return 0
+
+
+def feature_of(i):
+    return "salt" if i["ingredient"].lower() == "salt" else i["role"]
+
+
+def ratios(recipe):
+    """Every feature as a ratio to total structure (flour) weight.
+    Returns None if the recipe has no structural ingredient."""
+    structure = sum(grams(i) for i in recipe["ingredients"] if i["role"] == "structure")
+    if structure <= 0:
+        return None
+    out = {f: 0.0 for f in FEATURES}
+    for i in recipe["ingredients"]:
+        f = feature_of(i)
+        if f in out:
+            out[f] += grams(i) / structure
+    return out
+
+
+def learn_targets(recipes):
+    """Learn per-category median/spread of each ratio from the inspiring set."""
+    by_cat = defaultdict(list)
+    for r in recipes:
+        rt = ratios(r)
+        if rt:
+            by_cat[r.get("category", "cookie")].append(rt)
+
+    def stats(rows):
+        t = {}
+        for f in FEATURES:
+            vals = [row[f] for row in rows]
+            med = statistics.median(vals)
+            mad = statistics.median(abs(v - med) for v in vals) * 1.4826
+            # spread floor: never let a category become impossibly strict
+            t[f] = (med, max(mad, 0.25 * med, 0.05))
+        return t
+
+    TARGETS.clear()
+    TARGETS["_all"] = stats([x for rows in by_cat.values() for x in rows])
+    for cat, rows in by_cat.items():
+        # categories with very few examples fall back to the global targets
+        TARGETS[cat] = stats(rows) if len(rows) >= 5 else TARGETS["_all"]
 
 
 # ---------------------------------------------------------------------------
@@ -335,6 +413,8 @@ class RunResult:
 def run_evolution(recipes, population_size=30, generations=100, seed=None):
     if seed is not None:
         random.seed(seed)
+
+    learn_targets(recipes)  # must happen before any fitness evaluation
 
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)

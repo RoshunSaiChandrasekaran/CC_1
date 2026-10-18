@@ -259,14 +259,8 @@ def _scaled_amount(value, unit):
 FLAVOUR_ROLES = ("mix-in", "flavour")
 
 
-def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7, max_ops=3):
-    """Apply between 1 and max_ops random mutations to the recipe."""
-    for _ in range(random.randint(1, max_ops)):
-        _mutate_once(recipe, all_ingredients, by_role, same_role_prob)
-
-
-def _mutate_once(recipe, all_ingredients, by_role, same_role_prob):
-    op = random.randint(0, 4)
+def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
+    op = random.randint(0, 3)
     ingredients = recipe["ingredients"]
 
     if op == 0 and ingredients:
@@ -301,22 +295,6 @@ def _mutate_once(recipe, all_ingredients, by_role, same_role_prob):
         # delete a random ingredient
         i = random.randrange(len(ingredients))
         ingredients.pop(i)
-
-    elif op == 4:
-        # swap a mix-in / flavour for a different one of the same role and unit
-        # (e.g. blueberries -> walnuts). The random slot pick in op 1 rarely
-        # lands on the flavour, so this operator targets it directly.
-        slots = [k for k, ing in enumerate(ingredients) if ing["role"] in FLAVOUR_ROLES]
-        if slots:
-            i = random.choice(slots)
-            current = ingredients[i]
-            options = [c for c in by_role.get(current["role"], [])
-                       if c["ingredient"] != current["ingredient"] and c["unit"] == current["unit"]]
-            if options:
-                choice = random.choice(options)
-                ingredients[i] = dict(current)
-                ingredients[i]["ingredient"] = choice["ingredient"]
-
 
 # ---------------------------------------------------------------------------
 # Normalisation
@@ -432,6 +410,11 @@ def select_population(population, new_recipes, min_per_category=2):
     unique, duplicates, seen = [], [], set()
     for r in pool:
         sig = recipe_signature(r)
+
+        # Recipes that are already in the inspiring set are not eligible survivors at all
+        if sig in INSPIRING_SIGNATURES:
+            continue
+
         if sig in seen:
             duplicates.append(r)
         else:
@@ -469,11 +452,18 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)
 
+    # Keep a global set of signatures from the original inspiring
+    # set so survivor selection can exclude them.
+    global INSPIRING_SIGNATURES
+    INSPIRING_SIGNATURES = {recipe_signature(r) for r in recipes}
+
     population = init_population(recipes, population_size)
 
     result = RunResult()
     for gen in range(generations):
-        new_recipes = generate_recipes(population_size, population, all_ingredients, by_role)
+        # Generate a larger candidate pool because original inspiring recipes
+        # are now ineligible to survive.
+        new_recipes = generate_recipes(population_size * 2, population, all_ingredients, by_role)
         population = select_population(population, new_recipes)
         result.best_fitness_history.append(population[0]["fitness"])
         result.mean_fitness_history.append(sum(r["fitness"] for r in population) / len(population))

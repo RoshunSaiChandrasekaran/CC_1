@@ -164,6 +164,28 @@ def weight_by_role(recipe, role):
     return sum(i["amount"] for i in recipe["ingredients"] if i["role"] == role and i["unit"] in ("g", "ml"))
 
 
+def recipe_ingredient_set(recipe):
+    """Set of ingredient names used by the recipe, ignoring amounts."""
+    return {i["ingredient"] for i in recipe["ingredients"]}
+
+
+def recipe_distance(r1, r2):
+    """Jaccard distance between the ingredient-name sets of two recipes."""
+    s1 = recipe_ingredient_set(r1)
+    s2 = recipe_ingredient_set(r2)
+    if not s1 and not s2:
+        return 0.0
+    return 1.0 - len(s1 & s2) / len(s1 | s2)
+
+
+def novelty_score(recipe, inspiring_recipes=None):
+    """Novelty = distance to the most similar recipe in the inspiring set."""
+    refs = INSPIRING_RECIPES if inspiring_recipes is None else inspiring_recipes
+    if not refs:
+        return 0.0
+    return min(recipe_distance(recipe, r) for r in refs)
+
+
 def evaluate_recipe(recipe):
     """Returns a score in 0..MAX_FITNESS (33). MAX_FITNESS = every ratio at
     its category's typical value and every flavour pair seen together in
@@ -197,8 +219,15 @@ def evaluate_recipe(recipe):
 
 
 def evaluate_population(recipes):
+    """Evaluate quality, novelty, and the V2 50/50 combined fitness."""
     for r in recipes:
-        r["fitness"] = evaluate_recipe(r)
+        quality = evaluate_recipe(r)
+        novelty = novelty_score(r)
+        r["quality_score"] = quality
+        r["novelty_score"] = novelty
+        # Equal weighting: quality remains on the 0..33 scale; novelty is
+        # 0..1, so scale novelty to the same MAX_FITNESS range first.
+        r["fitness"] = 0.5 * quality + 0.5 * novelty * MAX_FITNESS
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +286,13 @@ def _scaled_amount(value, unit):
 
 
 FLAVOUR_ROLES = ("mix-in", "flavour")
+
+
+def _scaled_amount(value, unit):
+    """Round an amount without truncating small values to zero."""
+    if unit == "unit":
+        return max(1, round(value))
+    return max(0.5, round(value, 1)) if value < 10 else int(value)
 
 
 def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
@@ -449,11 +485,13 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
 
     learn_targets(recipes)  # must happen before any fitness evaluation
 
+    global INSPIRING_RECIPES
+    INSPIRING_RECIPES = recipes
+
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)
 
-    # Keep a global set of signatures from the original inspiring
-    # set so survivor selection can exclude them.
+    # Keep a global set of signatures from the original inspiring set so survivor selection can exclude them.
     global INSPIRING_SIGNATURES
     INSPIRING_SIGNATURES = {recipe_signature(r) for r in recipes}
 

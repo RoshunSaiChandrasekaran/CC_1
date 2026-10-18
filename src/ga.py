@@ -47,6 +47,7 @@ MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
 MAX_FITNESS = 33  # fitness is scaled to 0..MAX_FITNESS (same ceiling as the original function)
+MIN_QUALITY_SCORE = 0.70 * MAX_FITNESS  # minimum acceptable baking quality / validity gate
 
 EGG_G = 50  # assumed weight of one egg, so eggs count towards the binding ratio
 
@@ -66,6 +67,8 @@ FEATURES = list(FEATURE_WEIGHT)
 # Filled by learn_targets():
 TARGETS = {}   # category -> feature -> (median, spread)
 PAIRS = set()  # (mix-in/flavour) pairs seen together in real recipes
+INSPIRING_SIGNATURES = set()  # signatures that must never survive into the final population
+INSPIRING_RECIPES = []       # original recipes used as the novelty reference set
 
 
 def load_inspiring_set(path):
@@ -225,9 +228,14 @@ def evaluate_population(recipes):
         novelty = novelty_score(r)
         r["quality_score"] = quality
         r["novelty_score"] = novelty
-        # Equal weighting: quality remains on the 0..33 scale; novelty is
-        # 0..1, so scale novelty to the same MAX_FITNESS range first.
-        r["fitness"] = 0.5 * quality + 0.5 * novelty * MAX_FITNESS
+
+        # Equal weighting once a recipe clears the minimum quality/validity
+        # floor. Below the floor, novelty cannot compensate for poor baking
+        # quality: the recipe is ranked only by its quality score.
+        if quality < MIN_QUALITY_SCORE:
+            r["fitness"] = quality
+        else:
+            r["fitness"] = 0.5 * quality + 0.5 * novelty * MAX_FITNESS
 
 
 # ---------------------------------------------------------------------------
@@ -277,16 +285,6 @@ def crossover_recipes(r1, r2):
 # ---------------------------------------------------------------------------
 # Mutation
 # ---------------------------------------------------------------------------
-
-def _scaled_amount(value, unit):
-    """Round an amount without truncating small values to zero."""
-    if unit == "unit":
-        return max(1, round(value))
-    return max(0.5, round(value, 1)) if value < 10 else int(value)
-
-
-FLAVOUR_ROLES = ("mix-in", "flavour")
-
 
 def _scaled_amount(value, unit):
     """Round an amount without truncating small values to zero."""

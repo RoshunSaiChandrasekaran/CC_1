@@ -21,6 +21,7 @@ import random
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass, field
+from itertools import combinations
 
 
 # ---------------------------------------------------------------------------
@@ -56,6 +57,9 @@ TARGETS = {}  # category -> feature -> (median, spread); filled by learn_targets
 NOVELTY_WEIGHT = 0.25  # fitness = quality * (1 - NOVELTY_WEIGHT + NOVELTY_WEIGHT * novelty)
 INSPIRING_RECIPES = []  # reference set for novelty; filled by run_evolution()
 INSPIRING_SIGNATURES = set()  # seed signatures that may not survive; filled by run_evolution()
+PAIRS = set()  # (mix-in/flavour) pairs seen together in real recipes; filled by learn_targets()
+MEAL_FLAVOURS = defaultdict(set)  # meal_type -> mix-ins/flavours seen in real recipes of that meal type
+QUALITY_W, PAIR_W, MEAL_W = 0.75, 0.15, 0.10  # blend inside the 0..1 quality score
 MIN_DISTANCE = 0.15  # survivors must differ from each other by at least this Jaccard distance
 MAX_CATEGORY_SHARE = 0.4  # no category may take more than this share of the population
 
@@ -114,13 +118,24 @@ def ratios(recipe):
     return out
 
 
+def flavour_names(recipe):
+    return sorted({i["ingredient"] for i in recipe["ingredients"]
+                   if i["role"] in ("mix-in", "flavour")
+                   and i["ingredient"].lower() != "salt"})
+
+
 def learn_targets(recipes):
-    """Learn per-category median/spread of each ratio from the inspiring set."""
+    """Learn per-category median/spread of each ratio from the inspiring set,
+    plus which flavour pairs co-occur and which flavours go with which meal type."""
     by_cat = defaultdict(list)
+    PAIRS.clear()
+    MEAL_FLAVOURS.clear()
     for r in recipes:
         rt = ratios(r)
         if rt:
             by_cat[r.get("category", "cookie")].append(rt)
+        PAIRS.update(combinations(flavour_names(r), 2))
+        MEAL_FLAVOURS[r.get("meal_type")].update(flavour_names(r))
 
     def stats(rows):
         t = {}
@@ -154,12 +169,27 @@ def gaussian_quality(recipe):
     return score / sum(FEATURE_WEIGHT.values())
 
 
+def pair_score(recipe):
+    """Fraction of mix-in/flavour pairs that appear together in real recipes."""
+    pairs = list(combinations(flavour_names(recipe), 2))
+    return sum(p in PAIRS for p in pairs) / len(pairs) if pairs else 1.0
+
+
+def meal_score(recipe):
+    """Fraction of mix-in/flavour ingredients seen in real recipes of the same meal type."""
+    names = flavour_names(recipe)
+    seen = MEAL_FLAVOURS.get(recipe.get("meal_type"), set())
+    return sum(n in seen for n in names) / len(names) if names else 1.0
+
+
 def evaluate_recipe(recipe):
     """Quality in 0..1 = ratio closeness, with role coverage and recipe size
     as multiplicative gates (no -15 penalties, so no cliffs)."""
     if not TARGETS:
         raise RuntimeError("Call learn_targets(recipes) before evaluate_recipe().")
-    quality = gaussian_quality(recipe)
+    quality = (QUALITY_W * gaussian_quality(recipe)
+               + PAIR_W * pair_score(recipe)
+               + MEAL_W * meal_score(recipe))
 
     roles_present = {i["role"] for i in recipe["ingredients"]}
     missing = [r for r in ESSENTIAL_ROLES if r not in roles_present]
@@ -239,11 +269,14 @@ def crossover_recipes(r1, r2):
     r1a = r1["ingredients"][:p1]
     r2b = r2["ingredients"][p2:]
 
+    # the child takes category / meal type from the parent that contributed more ingredients
+    major = r1 if len(r1a) >= len(r2b) else r2
+
     _recipe_counter[0] += 1
     new_recipe = {
         "name": f"recipe {_recipe_counter[0]}",
-        "category": r1.get("category", r2.get("category", "cookie")),
-        "meal_type": r1.get("meal_type", r2.get("meal_type", "snack")),
+        "category": major.get("category", "cookie"),
+        "meal_type": major.get("meal_type", "snack"),
         "ingredients": copy.deepcopy(r1a) + copy.deepcopy(r2b),
     }
     return new_recipe

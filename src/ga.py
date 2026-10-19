@@ -53,6 +53,8 @@ FEATURE_WEIGHT = {
 FEATURES = list(FEATURE_WEIGHT)
 
 TARGETS = {}  # category -> feature -> (median, spread); filled by learn_targets()
+NOVELTY_WEIGHT = 0.25  # fitness = quality * (1 - NOVELTY_WEIGHT + NOVELTY_WEIGHT * novelty)
+INSPIRING_RECIPES = []  # reference set for novelty; filled by run_evolution()
 
 
 def load_inspiring_set(path):
@@ -166,9 +168,38 @@ def evaluate_recipe(recipe):
     return quality
 
 
+def recipe_ingredient_set(recipe):
+    """Ingredient names used by the recipe, ignoring amounts and decorations
+    (decorations have near-unique names, so counting them rewards padding)."""
+    return {i["ingredient"] for i in recipe["ingredients"] if i["role"] != "decoration"}
+
+
+def recipe_distance(r1, r2):
+    """Jaccard distance between the ingredient-name sets of two recipes."""
+    s1 = recipe_ingredient_set(r1)
+    s2 = recipe_ingredient_set(r2)
+    if not s1 and not s2:
+        return 0.0
+    return 1.0 - len(s1 & s2) / len(s1 | s2)
+
+
+def novelty_score(recipe):
+    """Novelty = distance to the most similar recipe in the inspiring set."""
+    if not INSPIRING_RECIPES:
+        return 0.0
+    return min(recipe_distance(recipe, r) for r in INSPIRING_RECIPES)
+
+
 def evaluate_population(recipes):
+    """fitness = MAX_FITNESS * quality * (0.75 + 0.25 * novelty).
+    Multiplying (instead of adding) means weak baking can never be rescued
+    by novelty, and there is no threshold cliff."""
     for r in recipes:
-        r["fitness"] = evaluate_recipe(r) * MAX_FITNESS
+        q = evaluate_recipe(r)
+        nov = novelty_score(r)
+        r["quality_score"] = q * MAX_FITNESS
+        r["novelty_score"] = nov
+        r["fitness"] = MAX_FITNESS * q * (1 - NOVELTY_WEIGHT + NOVELTY_WEIGHT * nov)
 
 
 # ---------------------------------------------------------------------------
@@ -385,6 +416,8 @@ def select_population(population, new_recipes):
 class RunResult:
     best_fitness_history: list = field(default_factory=list)
     mean_fitness_history: list = field(default_factory=list)
+    mean_quality_history: list = field(default_factory=list)
+    mean_novelty_history: list = field(default_factory=list)
     final_population: list = field(default_factory=list)
 
 
@@ -393,6 +426,9 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
         random.seed(seed)
 
     learn_targets(recipes)  # must happen before any fitness evaluation
+
+    global INSPIRING_RECIPES
+    INSPIRING_RECIPES = recipes
 
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)
@@ -405,6 +441,8 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
         population = select_population(population, new_recipes)
         result.best_fitness_history.append(population[0]["fitness"])
         result.mean_fitness_history.append(sum(r["fitness"] for r in population) / len(population))
+        result.mean_quality_history.append(sum(r["quality_score"] for r in population) / len(population))
+        result.mean_novelty_history.append(sum(r["novelty_score"] for r in population) / len(population))
 
     for r in population:
         round_for_presentation(r)

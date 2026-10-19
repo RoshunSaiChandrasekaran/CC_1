@@ -35,6 +35,8 @@ MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
 MAX_UNIT_COUNT = 6  # cap for whole-item ingredients (no recipe gets 10 eggs)
+MIN_SHARE = 0.02  # g/ml ingredients below this share of the structure weight are dropped as crumbs...
+TRACE_ROLES = ("seasoning", "leavening", "flavour")  # ...except roles that are small by nature
 MAX_FITNESS = 33  # fitness is scaled to 0..MAX_FITNESS (same ceiling as before)
 EGG_G = 50  # assumed weight of one egg, so eggs count towards the binding ratio
 MISSING_ROLE_FACTOR = 0.3  # quality is multiplied by this for each missing essential role
@@ -54,11 +56,15 @@ FEATURE_WEIGHT = {
 FEATURES = list(FEATURE_WEIGHT)
 
 TARGETS = {}  # category -> feature -> (median, spread); filled by learn_targets()
-NOVELTY_WEIGHT = 0.25  # fitness = quality * (1 - NOVELTY_WEIGHT + NOVELTY_WEIGHT * novelty)
+NOVELTY_WEIGHT = 0.2  # fitness = quality * (BASE + NOVELTY_WEIGHT*novelty + SURPRISE_WEIGHT*surprise)
+SURPRISE_WEIGHT = 0.2  # bonus for one flavour/mix-in never seen in the recipe's category
+BASE_WEIGHT = 1 - NOVELTY_WEIGHT - SURPRISE_WEIGHT
 INSPIRING_RECIPES = []  # reference set for novelty; filled by run_evolution()
 INSPIRING_SIGNATURES = set()  # seed signatures that may not survive; filled by run_evolution()
 PAIRS = set()  # (mix-in/flavour) pairs seen together in real recipes; filled by learn_targets()
 MEAL_FLAVOURS = defaultdict(set)  # meal_type -> mix-ins/flavours seen in real recipes of that meal type
+CATEGORY_FLAVOURS = defaultdict(set)  # category -> mix-ins/flavours seen in real recipes of that category
+MIXINS_BY_CATEGORY = defaultdict(list)  # category -> mix-in ingredient dicts, for the transplant mutation
 QUALITY_W, PAIR_W, MEAL_W = 0.75, 0.15, 0.10  # blend inside the 0..1 quality score
 MIN_DISTANCE = 0.15  # survivors must differ from each other by at least this Jaccard distance
 MAX_CATEGORY_SHARE = 0.4  # no category may take more than this share of the population
@@ -130,12 +136,18 @@ def learn_targets(recipes):
     by_cat = defaultdict(list)
     PAIRS.clear()
     MEAL_FLAVOURS.clear()
+    CATEGORY_FLAVOURS.clear()
+    MIXINS_BY_CATEGORY.clear()
     for r in recipes:
         rt = ratios(r)
         if rt:
             by_cat[r.get("category", "cookie")].append(rt)
         PAIRS.update(combinations(flavour_names(r), 2))
         MEAL_FLAVOURS[r.get("meal_type")].update(flavour_names(r))
+        CATEGORY_FLAVOURS[r.get("category")].update(flavour_names(r))
+        for i in r["ingredients"]:
+            if i["role"] == "mix-in":
+                MIXINS_BY_CATEGORY[r.get("category")].append(dict(i))
 
     def stats(rows):
         t = {}
@@ -223,8 +235,16 @@ def novelty_score(recipe):
     return min(recipe_distance(recipe, r) for r in INSPIRING_RECIPES)
 
 
+def surprise_score(recipe):
+    """1 if the recipe has at least one mix-in/flavour never seen in its own
+    category, else 0. Capped at 1: one deliberate surprise counts, stacking
+    several does not."""
+    seen = CATEGORY_FLAVOURS.get(recipe.get("category"), set())
+    return 1.0 if any(n not in seen for n in flavour_names(recipe)) else 0.0
+
+
 def evaluate_population(recipes):
-    """fitness = MAX_FITNESS * quality * (0.75 + 0.25 * novelty).
+    """fitness = MAX_FITNESS * quality * (BASE + NOVELTY_WEIGHT*novelty + SURPRISE_WEIGHT*surprise).
     Multiplying (instead of adding) means weak baking can never be rescued
     by novelty, and there is no threshold cliff."""
     for r in recipes:
@@ -232,7 +252,9 @@ def evaluate_population(recipes):
         nov = novelty_score(r)
         r["quality_score"] = q * MAX_FITNESS
         r["novelty_score"] = nov
-        r["fitness"] = MAX_FITNESS * q * (1 - NOVELTY_WEIGHT + NOVELTY_WEIGHT * nov)
+        sur = surprise_score(r)
+        r["surprise_score"] = sur
+        r["fitness"] = MAX_FITNESS * q * (BASE_WEIGHT + NOVELTY_WEIGHT * nov + SURPRISE_WEIGHT * sur)
 
 
 # ---------------------------------------------------------------------------
@@ -312,7 +334,7 @@ def round_for_presentation(recipe):
 
 
 def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
-    op = random.randint(0, 3)
+    op = random.randint(0, 4)
     ingredients = recipe["ingredients"]
 
     if op == 0 and ingredients:
@@ -348,6 +370,19 @@ def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
         i = random.randrange(len(ingredients))
         ingredients.pop(i)
 
+    elif op == 4:
+        # transplant: bring in a mix-in that belongs to a *different* category
+        # (e.g. bacon into a cookie), replacing an existing mix-in if there is one
+        cat = recipe.get("category")
+        foreign = [i for c, lst in MIXINS_BY_CATEGORY.items() if c != cat for i in lst]
+        if foreign:
+            new_ing = dict(random.choice(foreign))
+            slots = [k for k, i in enumerate(ingredients) if i["role"] == "mix-in"]
+            if slots:
+                ingredients[random.choice(slots)] = new_ing
+            else:
+                ingredients.append(new_ing)
+
 
 # ---------------------------------------------------------------------------
 # Normalisation
@@ -377,6 +412,13 @@ def normalise_recipe(recipe, target_structure_weight=TARGET_STRUCTURE_WEIGHT):
         else:
             merged[key] = dict(i)
     ingredients = list(merged.values())
+
+    # drop crumb-sized leftovers (e.g. 1g of cocoa in a 250g flour base); small-by-nature roles are kept
+    total_structure = sum(i["amount"] for i in ingredients if i["role"] == "structure" and i["unit"] in ("g", "ml"))
+    if total_structure > 0:
+        ingredients = [i for i in ingredients
+                       if i["unit"] not in ("g", "ml") or i["role"] in TRACE_ROLES
+                       or i["amount"] >= MIN_SHARE * total_structure]
 
     structure_weight = sum(i["amount"] for i in ingredients if i["role"] == "structure" and i["unit"] in ("g", "ml"))
     if structure_weight > 0:

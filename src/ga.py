@@ -39,6 +39,7 @@ RATIO_BANDS = {
 MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
+MAX_UNIT_COUNT = 6  # cap for whole-item ingredients (no recipe gets 10 eggs)
 
 
 def load_inspiring_set(path):
@@ -178,6 +179,31 @@ def crossover_recipes(r1, r2):
 # Mutation
 # ---------------------------------------------------------------------------
 
+def _scaled_amount(value, unit):
+    """Round an amount without truncating small values to 0 or 1.
+    Whole items are rounded to an integer between 1 and MAX_UNIT_COUNT."""
+    if unit == "unit":
+        return max(1, min(MAX_UNIT_COUNT, round(value)))
+    return max(0.5, round(value, 1)) if value < 10 else int(value)
+
+
+def _present_amount(value, unit):
+    """Round to a value a person would actually write in a recipe."""
+    if unit == "unit":
+        return max(1, min(MAX_UNIT_COUNT, round(value)))
+    if value < 10:
+        return max(0.5, round(value * 2) / 2)  # nearest 0.5
+    if value < 20:
+        return int(round(value))  # nearest 1
+    return int(5 * round(value / 5))  # nearest 5
+
+
+def round_for_presentation(recipe):
+    """Applied once, to the final population only."""
+    for i in recipe["ingredients"]:
+        i["amount"] = _present_amount(i["amount"], i["unit"])
+
+
 def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
     op = random.randint(0, 3)
     ingredients = recipe["ingredients"]
@@ -187,7 +213,7 @@ def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
         i = random.randrange(len(ingredients))
         ingredients[i] = dict(ingredients[i])
         delta = random.uniform(-0.3, 0.3)
-        ingredients[i]["amount"] = max(1, int(ingredients[i]["amount"] * (1 + delta)))
+        ingredients[i]["amount"] = _scaled_amount(ingredients[i]["amount"] * (1 + delta), ingredients[i]["unit"])
 
     elif op == 1 and ingredients:
         # swap an ingredient for another one; prefer one with the same role
@@ -203,6 +229,7 @@ def mutate_recipe(recipe, all_ingredients, by_role, same_role_prob=0.7):
         ingredients[i]["ingredient"] = choice["ingredient"]
         ingredients[i]["role"] = choice["role"]
         ingredients[i]["unit"] = choice["unit"]
+        ingredients[i]["amount"] = choice["amount"]  # bug fix: amount used to be kept from the old ingredient
 
     elif op == 2:
         # add a new ingredient drawn from the inspiring set
@@ -249,11 +276,11 @@ def normalise_recipe(recipe, target_structure_weight=TARGET_STRUCTURE_WEIGHT):
         scale = target_structure_weight / structure_weight
         for i in ingredients:
             if i["unit"] in ("g", "ml"):
-                i["amount"] = max(1, int(i["amount"] * scale))
+                i["amount"] = _scaled_amount(i["amount"] * scale, i["unit"])
             elif i["unit"] == "unit":
                 # round whole-item ingredients (eggs, bananas...) to the
                 # nearest whole number, scaled gently, minimum of 1
-                i["amount"] = max(1, round(i["amount"] * scale))
+                i["amount"] = _scaled_amount(i["amount"] * scale, i["unit"])
 
     recipe["ingredients"] = ingredients
 
@@ -338,6 +365,7 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
         result.mean_fitness_history.append(sum(r["fitness"] for r in population) / len(population))
 
     for r in population:
+        round_for_presentation(r)
         if r["name"].startswith("recipe "):
             name_recipe(r)
 

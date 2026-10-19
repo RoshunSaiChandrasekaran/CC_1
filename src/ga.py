@@ -55,6 +55,9 @@ FEATURES = list(FEATURE_WEIGHT)
 TARGETS = {}  # category -> feature -> (median, spread); filled by learn_targets()
 NOVELTY_WEIGHT = 0.25  # fitness = quality * (1 - NOVELTY_WEIGHT + NOVELTY_WEIGHT * novelty)
 INSPIRING_RECIPES = []  # reference set for novelty; filled by run_evolution()
+INSPIRING_SIGNATURES = set()  # seed signatures that may not survive; filled by run_evolution()
+MIN_DISTANCE = 0.15  # survivors must differ from each other by at least this Jaccard distance
+MAX_CATEGORY_SHARE = 0.4  # no category may take more than this share of the population
 
 
 def load_inspiring_set(path):
@@ -404,12 +407,38 @@ def generate_recipes(size, population, all_ingredients, by_role):
     return new_recipes
 
 
-def select_population(population, new_recipes):
-    new_recipes.sort(key=lambda r: r["fitness"], reverse=True)
-    half = len(population) // 2
-    combined = population[:half] + new_recipes[:half]
-    combined.sort(key=lambda r: r["fitness"], reverse=True)
-    return combined
+def recipe_signature(recipe):
+    """Identity used to detect seed copies: category + ingredient names
+    (amounts and decorations ignored)."""
+    return (recipe.get("category"), tuple(sorted(recipe_ingredient_set(recipe))))
+
+
+def select_population(population, new_recipes, size):
+    """Greedy diverse survivor selection, best fitness first:
+      - inspiring-set recipes are never eligible,
+      - a recipe is skipped if it is too close to one already kept,
+      - a category cannot exceed MAX_CATEGORY_SHARE of the population,
+      - if that leaves fewer than `size` survivors, skipped recipes top it up.
+    """
+    cap = max(2, int(MAX_CATEGORY_SHARE * size))
+    pool = sorted(population + new_recipes, key=lambda r: r["fitness"], reverse=True)
+    survivors, skipped, counts = [], [], defaultdict(int)
+    for r in pool:
+        if recipe_signature(r) in INSPIRING_SIGNATURES:
+            continue
+        cat = r.get("category")
+        too_close = any(recipe_distance(r, s) < MIN_DISTANCE for s in survivors)
+        if counts[cat] >= cap or too_close:
+            skipped.append(r)
+            continue
+        survivors.append(r)
+        counts[cat] += 1
+        if len(survivors) == size:
+            break
+    if len(survivors) < size:
+        survivors += skipped[: size - len(survivors)]
+    survivors.sort(key=lambda r: r["fitness"], reverse=True)
+    return survivors
 
 
 @dataclass
@@ -427,8 +456,9 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
 
     learn_targets(recipes)  # must happen before any fitness evaluation
 
-    global INSPIRING_RECIPES
+    global INSPIRING_RECIPES, INSPIRING_SIGNATURES
     INSPIRING_RECIPES = recipes
+    INSPIRING_SIGNATURES = {recipe_signature(r) for r in recipes}
 
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)
@@ -437,8 +467,8 @@ def run_evolution(recipes, population_size=30, generations=100, seed=None):
 
     result = RunResult()
     for gen in range(generations):
-        new_recipes = generate_recipes(population_size, population, all_ingredients, by_role)
-        population = select_population(population, new_recipes)
+        new_recipes = generate_recipes(population_size * 2, population, all_ingredients, by_role)
+        population = select_population(population, new_recipes, population_size)
         result.best_fitness_history.append(population[0]["fitness"])
         result.mean_fitness_history.append(sum(r["fitness"] for r in population) / len(population))
         result.mean_quality_history.append(sum(r["quality_score"] for r in population) / len(population))

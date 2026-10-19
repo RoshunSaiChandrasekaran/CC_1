@@ -16,30 +16,43 @@ Core evolutionary algorithm for the Cookie/Cake Recipe Generator.
 
 import copy
 import json
+import math
 import random
+import statistics
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 
 # ---------------------------------------------------------------------------
 # Constants describing what makes a "valid"/"good" baked good.
-# These bands were set by eyeballing typical ratios in the inspiring set
-# (see data/inspiring_set.json) and standard baking references; they are
-# deliberately a rough, declared approximation rather than ground truth
+# Ideal ratios are now learned from the inspiring set (see learn_targets);
+# the weights below are a declared design choice, not ground truth
 # ---------------------------------------------------------------------------
 
 ESSENTIAL_ROLES = ["structure", "fat", "sweetener"]
-BONUS_ROLES = ["binding", "leavening", "liquid", "flavour", "mix-in"]
-
-# acceptable ratio of (role weight) / (structure weight)
-RATIO_BANDS = {
-    "fat": (0.25, 1.0),
-    "sweetener": (0.25, 1.3),
-}
-
 MIN_INGREDIENTS = 4
 MAX_INGREDIENTS = 14
 TARGET_STRUCTURE_WEIGHT = 250  # grams of "structure" ingredients a normalised recipe should contain
 MAX_UNIT_COUNT = 6  # cap for whole-item ingredients (no recipe gets 10 eggs)
+MAX_FITNESS = 33  # fitness is scaled to 0..MAX_FITNESS (same ceiling as before)
+EGG_G = 50  # assumed weight of one egg, so eggs count towards the binding ratio
+MISSING_ROLE_FACTOR = 0.3  # quality is multiplied by this for each missing essential role
+SIZE_FACTOR = 0.7  # quality multiplier for too few / too many ingredients
+
+# How much each ratio (relative to flour weight) matters in the quality score
+FEATURE_WEIGHT = {
+    "fat": 3,
+    "sweetener": 3,
+    "binding": 2,
+    "liquid": 2,
+    "leavening": 2,
+    "salt": 1,
+    "mix-in": 1.5,
+    "flavour": 1,
+}
+FEATURES = list(FEATURE_WEIGHT)
+
+TARGETS = {}  # category -> feature -> (median, spread); filled by learn_targets()
 
 
 def load_inspiring_set(path):
@@ -69,66 +82,93 @@ def ingredients_by_role(all_ingredients):
 # Fitness
 # ---------------------------------------------------------------------------
 
-def weight_by_role(recipe, role):
-    return sum(i["amount"] for i in recipe["ingredients"] if i["role"] == role and i["unit"] in ("g", "ml"))
+def grams(i):
+    """Approximate weight of an ingredient line (eggs count as EGG_G each)."""
+    if i["unit"] in ("g", "ml"):
+        return i["amount"]
+    if i["unit"] == "unit" and "egg" in i["ingredient"].lower():
+        return i["amount"] * EGG_G
+    return 0
+
+
+def feature_of(i):
+    return "salt" if i["ingredient"].lower() == "salt" else i["role"]
+
+
+def ratios(recipe):
+    """Every feature as a ratio to total structure (flour) weight.
+    Returns None if the recipe has no structural ingredient."""
+    structure = sum(grams(i) for i in recipe["ingredients"] if i["role"] == "structure")
+    if structure <= 0:
+        return None
+    out = {f: 0.0 for f in FEATURES}
+    for i in recipe["ingredients"]:
+        f = feature_of(i)
+        if f in out:
+            out[f] += grams(i) / structure
+    return out
+
+
+def learn_targets(recipes):
+    """Learn per-category median/spread of each ratio from the inspiring set."""
+    by_cat = defaultdict(list)
+    for r in recipes:
+        rt = ratios(r)
+        if rt:
+            by_cat[r.get("category", "cookie")].append(rt)
+
+    def stats(rows):
+        t = {}
+        for f in FEATURES:
+            vals = [row[f] for row in rows]
+            med = statistics.median(vals)
+            mad = statistics.median(abs(v - med) for v in vals) * 1.4826
+            # spread floor: never let a category become impossibly strict
+            t[f] = (med, max(mad, 0.25 * med, 0.05))
+        return t
+
+    TARGETS.clear()
+    TARGETS["_all"] = stats([x for rows in by_cat.values() for x in rows])
+    for cat, rows in by_cat.items():
+        # categories with very few examples fall back to the global targets
+        TARGETS[cat] = stats(rows) if len(rows) >= 5 else TARGETS["_all"]
+
+
+def gaussian_quality(recipe):
+    """0..1: how close every ratio is to the typical value for the recipe's
+    category. Smooth, so there is always a gradient to climb."""
+    rt = ratios(recipe)
+    if rt is None:
+        return 0.0
+    target = TARGETS.get(recipe.get("category"), TARGETS["_all"])
+    score = 0.0
+    for f, w in FEATURE_WEIGHT.items():
+        med, spread = target[f]
+        z = (rt[f] - med) / spread
+        score += w * math.exp(-0.5 * z * z)
+    return score / sum(FEATURE_WEIGHT.values())
 
 
 def evaluate_recipe(recipe):
-    """Multi-factor fitness function.
+    """Quality in 0..1 = ratio closeness, with role coverage and recipe size
+    as multiplicative gates (no -15 penalties, so no cliffs)."""
+    if not TARGETS:
+        raise RuntimeError("Call learn_targets(recipes) before evaluate_recipe().")
+    quality = gaussian_quality(recipe)
 
-    Replaces Simple PIERRE's "fitness = number of ingredients" with a
-    score that rewards recipes that (a) actually contain the roles needed
-    to function as a baked good, (b) have fat/sweetener in a sensible
-    proportion to the structural ingredients, (c) are a sensible size,
-    and (d) have some variety of mix-in/flavour ingredients (a proxy for
-    interestingness/novelty).
-    """
     roles_present = {i["role"] for i in recipe["ingredients"]}
-    score = 0.0
+    missing = [r for r in ESSENTIAL_ROLES if r not in roles_present]
+    quality *= MISSING_ROLE_FACTOR ** len(missing)
 
-    # --- Validity: must contain the essential roles, or be heavily penalised
-    missing_essential = [r for r in ESSENTIAL_ROLES if r not in roles_present]
-    if missing_essential:
-        score -= 15 * len(missing_essential)
-
-    # --- Bonus roles present (binding, leavening, liquid, flavour, mix-in)
-    for r in BONUS_ROLES:
-        if r in roles_present:
-            score += 3
-
-    # --- Ratio quality, relative to structure weight
-    structure_weight = weight_by_role(recipe, "structure")
-    if structure_weight > 0:
-        for role, (low, high) in RATIO_BANDS.items():
-            role_weight = weight_by_role(recipe, role)
-            ratio = role_weight / structure_weight
-            if low <= ratio <= high:
-                score += 5
-            else:
-                # partial credit the closer it is to the band
-                distance = min(abs(ratio - low), abs(ratio - high))
-                score += max(0, 5 - distance * 5)
-    else:
-        score -= 10  # no structural ingredients at all -> not really a recipe
-
-    # --- Recipe-size sanity (too few or too many ingredients is unrealistic)
     n = len(recipe["ingredients"])
-    if n < MIN_INGREDIENTS:
-        score -= (MIN_INGREDIENTS - n) * 4
-    elif n > MAX_INGREDIENTS:
-        score -= (n - MAX_INGREDIENTS) * 2
-
-    # --- Mix-in / flavour variety bonus (proxy for interestingness), capped
-    interesting_roles = {"mix-in", "flavour"}
-    variety = len({i["ingredient"] for i in recipe["ingredients"] if i["role"] in interesting_roles})
-    score += min(variety, 4) * 2
-
-    return score
+    if n < MIN_INGREDIENTS or n > MAX_INGREDIENTS:
+        quality *= SIZE_FACTOR
+    return quality
 
 
 def evaluate_population(recipes):
     for r in recipes:
-        r["fitness"] = evaluate_recipe(r)
+        r["fitness"] = evaluate_recipe(r) * MAX_FITNESS
 
 
 # ---------------------------------------------------------------------------
@@ -351,6 +391,8 @@ class RunResult:
 def run_evolution(recipes, population_size=30, generations=100, seed=None):
     if seed is not None:
         random.seed(seed)
+
+    learn_targets(recipes)  # must happen before any fitness evaluation
 
     all_ingredients = collect_all_ingredients(recipes)
     by_role = ingredients_by_role(all_ingredients)

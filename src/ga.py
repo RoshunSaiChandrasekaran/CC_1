@@ -144,7 +144,7 @@ def learn_targets(recipes):
             med = statistics.median(vals)
             mad = statistics.median(abs(v - med) for v in vals) * 1.4826
             # spread floor: never let a category become impossibly strict
-            t[f] = (med, max(mad, 0.25 * med, 0.05))
+            t[f] = (med, max(mad, 0.25 * med, 0.01))
         return t
 
     TARGETS.clear()
